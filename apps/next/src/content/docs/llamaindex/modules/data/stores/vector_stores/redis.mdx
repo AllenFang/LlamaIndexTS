@@ -1,0 +1,136 @@
+---
+title: Redis Vector Store
+---
+
+[redis.io](https://redis.io/)
+
+To run this example, you need to have Redis Stack running. Redis Stack includes RediSearch which provides vector search capabilities. You can run it with Docker:
+
+```bash
+docker pull redis/redis-stack
+docker run -p 6379:6379 redis/redis-stack
+```
+
+## Installation
+
+```package-install
+npm i llamaindex @llamaindex/redis
+```
+
+## Importing the modules
+
+```ts
+import fs from "node:fs/promises";
+import { Document, VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
+import { RedisVectorStore } from "@llamaindex/redis";
+```
+
+## Load the documents
+
+```ts
+const path = "node_modules/llamaindex/examples/abramov.txt";
+const essay = await fs.readFile(path, "utf-8");
+```
+
+## Setup Redis
+
+```ts
+const vectorStore = new RedisVectorStore({
+  redisClientOptions: {
+    url: "redis://localhost:6379",
+  },
+  indexName: "llamaindex-demo", // Optional, defaults to "llamaindex-default-redis-index"
+});
+```
+
+## Setup the index
+
+```ts
+const document = new Document({ text: essay, id_: path });
+const storageContext = await storageContextFromDefaults({ vectorStore });
+const index = await VectorStoreIndex.fromDocuments([document], {
+  storageContext,
+});
+```
+
+## Query the index
+
+```ts
+const queryEngine = index.asQueryEngine();
+
+const response = await queryEngine.query({
+  query: "What did the author do in college?",
+});
+
+// Output response
+console.log(response.toString());
+```
+
+## Full code
+
+```ts
+import fs from "node:fs/promises";
+import { Document, VectorStoreIndex, storageContextFromDefaults } from "llamaindex";
+import { RedisVectorStore } from "@llamaindex/redis";
+
+async function main() {
+  const path = "node_modules/llamaindex/examples/abramov.txt";
+  const essay = await fs.readFile(path, "utf-8");
+
+  // Initialize the vector store
+  const vectorStore = new RedisVectorStore({
+    redisClientOptions: {
+      url: "redis://localhost:6379",
+    },
+    indexName: "llamaindex-demo", // Optional
+  });
+
+  // Create document
+  const document = new Document({ text: essay, id_: path });
+  
+  // Create storage context
+  const storageContext = await storageContextFromDefaults({ vectorStore });
+  
+  // Create and store embeddings
+  const index = await VectorStoreIndex.fromDocuments([document], {
+    storageContext,
+  });
+  
+  // Query the index
+  const queryEngine = index.asQueryEngine();
+  const response = await queryEngine.query({
+    query: "What did the author do in college?",
+  });
+
+  // Output response
+  console.log(response.toString());
+}
+
+main().catch(console.error);
+```
+
+## Advanced Configuration
+
+Redis Vector Store supports various configuration options:
+
+```ts
+const vectorStore = new RedisVectorStore({
+  // Use an existing Redis client
+  client: existingRedisClient,
+  
+  // Or configure a new client
+  redisClientOptions: {
+    url: "redis://username:password@hostname:port",
+    socket: {
+      reconnectStrategy: true,
+    },
+  },
+  
+  // Custom index name
+  indexName: "my-custom-index",
+});
+```
+
+## API Reference
+
+- [RedisVectorStore](/docs/api/classes/RedisVectorStore)

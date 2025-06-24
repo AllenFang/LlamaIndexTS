@@ -171,6 +171,9 @@
       "path": "./packages/providers/storage/qdrant/tsconfig.json"
     },
     {
+      "path": "./packages/providers/storage/redis/tsconfig.json"
+    },
+    {
       "path": "./packages/providers/storage/upstash/tsconfig.json"
     },
     {

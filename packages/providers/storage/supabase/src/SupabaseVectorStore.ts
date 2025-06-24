@@ -137,6 +137,7 @@ export class SupabaseVectorStore extends BaseVectorStore {
     const { data, error } = await this.supabaseClient.rpc("match_documents", {
       query_embedding: query.queryEmbedding,
       match_count: query.similarityTopK,
+      match_filter: query.filters,
     });
 
     if (error) {
